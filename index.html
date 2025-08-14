@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="eng">
+<head>
+<link rel="stylesheet" href='{{url_for("static",filename ="styles.css")}}' />
+<title>Face Masks Detection</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  function previewInput(event) {
+    const selectedFile = event.target.files[0];
+    if (selectedFile) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        document.getElementById('inputPreview').src = e.target.result;
+      };
+      reader.readAsDataURL(selectedFile);
+    }
+  }
+
+  async function runDetection() {
+    const file = document.getElementById('inputImage').files[0];
+    if (!file) {
+      alert("Please upload an image first.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      const response = await fetch('/object-detection/', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) throw new Error("Network response was not ok");
+
+      const data = await response.json();
+
+      // Show processed image with bounding boxes
+      document.getElementById('outputImage').src = "data:image/png;base64," + data.image;
+
+      // Update chart with class distribution
+      updateChart(data.class_distribution);
+
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Detection failed. Check console for details.');
+    }
+  }
+
+  let chartInstance = null;
+  function updateChart(classDist) {
+    const ctx = document.getElementById('classChart').getContext('2d');
+    const labels = Object.keys(classDist);
+    const values = Object.values(classDist);
+
+    if (chartInstance) {
+      chartInstance.destroy();
+    }
+
+    chartInstance = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Detections Count',
+          data: values,
+          backgroundColor: 'rgba(75, 192, 192, 0.6)',
+          borderColor: 'rgba(75, 192, 192, 1)',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: { beginAtZero: true }
+        }
+      }
+    });
+  }
+</script>
+</head>
+
+<body>
+<h1><center>Face mask detection 😷</center></h1>
+<hr>
+
+<div class="container">
+  <div class="box">
+    <h3>Upload an image here</h3>
+    <hr>
+    <input type="file" id="inputImage" accept="image/*" onchange="previewInput(event)">
+    <img id="inputPreview" src="" alt="Input Preview">
+    <br><br>
+    <button id="detectBtn" onclick="runDetection()">Run Detection</button>
+  </div>
+
+  <div class="box">
+    <h3>Detections:</h3>
+    <hr>
+    <img id="outputImage" src="" alt="Detection Output" width="200">
+  </div>
+</div>
+
+<hr>
+<h1><center>Classes Distribution 📊</center></h1>
+<center>
+  <div class="box" style="width: 500px;">
+    <canvas id="classChart"></canvas>
+  </div>
+</center>
+
+</body>
+</html>
