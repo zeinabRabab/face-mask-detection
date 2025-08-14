@@ -1,0 +1,30 @@
+body{
+    background-color: hsl(207, 54%, 84%);
+    font-family: Verdana;
+}
+
+
+   .container {
+      display: flex;
+      gap: 20px; /* space between the boxes */
+      justify-content: center; /* center the boxes horizontally */
+    }
+    .box {
+      border: 1px solid black;
+      height: 350px;
+      width: 400px;  /* same width */
+      box-sizing: border-box;
+      padding: 10px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    img {
+      max-width: 100%;
+      max-height: 140px;
+      margin-top: 10px;
+      object-fit: contain;
+    }
+
+  
+
